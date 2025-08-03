@@ -1,7 +1,4 @@
-# app/config.py
+# Configuration for the API client
 
-# Configuration settings for the application
-
-class Config:
-    API_URL = "https://api.example.com"
-    TIMEOUT = 30
+API_URL = 'https://api.example.com'
+API_KEY = 'your_api_key'

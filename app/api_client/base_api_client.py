@@ -1,13 +1,10 @@
-# Base API Client implementation
+import requests
 
 class BaseAPIClient:
-    def __init__(self, base_url: str):
-        self.base_url = base_url
+    def __init__(self, api_url, api_key):
+        self.api_url = api_url
+        self.api_key = api_key
 
-    def get(self, endpoint: str):
-        # Implement GET request logic
-        pass
-
-    def post(self, endpoint: str, data: dict):
-        # Implement POST request logic
-        pass
+    def get(self, endpoint):
+        response = requests.get(f'{self.api_url}/{endpoint}', headers={'Authorization': f'Bearer {self.api_key}'})
+        return response.json()

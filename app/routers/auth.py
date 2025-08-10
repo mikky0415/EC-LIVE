@@ -39,15 +39,12 @@ def exchange_token(payload: ExchangeIn):
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    auth = None
-    if payload.use_basic_auth:
-        auth = (client_id, client_secret)
-    else:
-        # Include in body if not using Basic auth
-        data.update({"client_id": client_id, "client_secret": client_secret})
+    # Always include in body per docs; optionally also use Basic auth
+    data.update({"client_id": client_id, "client_secret": client_secret})
+    auth = (client_id, client_secret) if payload.use_basic_auth else None
 
     try:
-        resp = requests.post(token_url, data=data, headers=headers, auth=auth, timeout=15)
+        resp = requests.post(token_url, data=data, headers=headers, auth=auth, timeout=30)
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Upstream error: {e}")
 
@@ -57,6 +54,25 @@ def exchange_token(payload: ExchangeIn):
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
     return resp.json() if "application/json" in content_type else {"raw": resp.text}
+
+
+@router.get("/auth/debug")
+def auth_debug():
+    """Return computed OAuth endpoints and key params (secrets masked)."""
+    client_id = os.getenv("BASE_CLIENT_ID")
+    client_secret = os.getenv("BASE_CLIENT_SECRET")
+    redirect_uri = os.getenv("BASE_REDIRECT_URI", "https://ec-live.onrender.com/callback")
+    authorize_url = os.getenv("BASE_OAUTH_AUTHORIZE_URL", "https://api.thebase.in/1/oauth/authorize")
+    token_url = os.getenv("BASE_OAUTH_TOKEN_URL", "https://api.thebase.in/1/oauth/token")
+
+    return {
+        "authorize_url": authorize_url,
+        "token_url": token_url,
+        "client_id_set": bool(client_id),
+        "client_secret_set": bool(client_secret),
+        "redirect_uri": redirect_uri,
+        "example_authorize": f"{authorize_url}?response_type=code&client_id={client_id or 'MISSING'}&redirect_uri={redirect_uri}&scope=read_items&state=ec-live",
+    }
 
 
 @router.get("/auth/authorize")

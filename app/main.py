@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from app.api_client.base_api_client import BaseAPIClient
 from app.config import RuntimeConfig
 from app.routers.items import router as items_router
+from app.routers.auth import router as auth_router
 from typing import Optional
 
 app = FastAPI(title="EC-LIVE", version="0.1.0")
@@ -13,6 +14,7 @@ client = BaseAPIClient(config.api_base_url, config.api_key)
 
 # Routers
 app.include_router(items_router)
+app.include_router(auth_router)
 
 
 class APIConfigIn(BaseModel):

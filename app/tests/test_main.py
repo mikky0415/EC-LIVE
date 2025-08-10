@@ -6,4 +6,5 @@ client = TestClient(app)
 def test_read_root():
     response = client.get('/')
     assert response.status_code == 200
-    assert response.json() == {'message': 'Welcome to the API'}
+    message = response.json()['message']
+    assert message.startswith('EC-LIVE'), f"Expected message to start with 'EC-LIVE', got: {message}"

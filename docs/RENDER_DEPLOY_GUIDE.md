@@ -1,5 +1,7 @@
 # EC-LIVE FastAPI Renderデプロイ手順（推奨構成）
 
+本番運用URL（Render）: https://ec-live.onrender.com/
+
 本ガイドは、**Render（https://render.com）でFastAPI（本プロジェクト）を安定・安全に公開運用するための推奨手順**です。
 
 ---

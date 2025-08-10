@@ -3,6 +3,10 @@
 ## Description
 This is the initial implementation of the API connection infrastructure and test suite.
 
+## Production URL
+
+- Render (production): https://ec-live.onrender.com/
+
 ## Requirements
 - Python 3.7+
 - FastAPI

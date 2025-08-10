@@ -16,6 +16,10 @@ client = BaseAPIClient(config.api_base_url, config.api_key)
 app.include_router(items_router)
 app.include_router(auth_router)
 
+# Also expose the same routers under "/api" prefix for compatibility
+app.include_router(items_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+
 
 class APIConfigIn(BaseModel):
     api_base_url: str
@@ -62,6 +66,7 @@ def api_test():
 
 
 @app.get("/callback")
+@app.get("/api/callback")
 def oauth_callback(
     code: Optional[str] = Query(None, description="Authorization code from BASE"),
     state: Optional[str] = Query(None, description="Opaque state value"),

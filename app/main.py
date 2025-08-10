@@ -2,12 +2,16 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from app.api_client.base_api_client import BaseAPIClient
 from app.config import RuntimeConfig
+from app.routers.items import router as items_router
 
 app = FastAPI(title="EC-LIVE", version="0.1.0")
 
 # ランタイム設定とクライアント初期化
 config = RuntimeConfig()
 client = BaseAPIClient(config.api_base_url, config.api_key)
+
+# Routers
+app.include_router(items_router)
 
 
 class APIConfigIn(BaseModel):

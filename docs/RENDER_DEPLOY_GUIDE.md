@@ -35,18 +35,19 @@
 ### 4-2. Branch
 - `main` を選択
 
-### 4-3. Build & Start Command
+### 4-3. Build & Start Command（重要: gunicornは不要）
 - **Build Command**  
   ```
   pip install --upgrade pip
   pip install -r requirements.txt
   ```
 
-- **Start Command**  
+- **Start Command（推奨）**  
   ```
   uvicorn app.main:app --host 0.0.0.0 --port $PORT
   ```
-  ※`$PORT` はRenderの自動割り当て環境変数なので必ずこう書く
+  - gunicorn は本プロジェクトでは使用しません（requirementsにも含めません）。
+  - `$PORT` はRenderの自動割当て環境変数なので必ずこの指定にすること。
 
 ---
 
@@ -93,6 +94,13 @@
     - BASE_APIトークンやURLが正しいか、「Environment Variables」を再確認
 - **/docsや/itemsにアクセス不可**
     - サービスURL・エンドポイントのスペルミスに注意
+    
+- **bash: gunicorn: command not found**
+    - Start Command が `gunicorn ...` になっていると発生します。Renderのサービス設定で次のように修正してください。
+      ```
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+      ```
+    - もしくはこのリポジトリの `render.yaml` を使ったBlueprintデプロイで設定を固定化してください。
 
 ---
 

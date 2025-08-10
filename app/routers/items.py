@@ -46,17 +46,27 @@ def list_items(
     try:
         resp = requests.get(
             f"{base_api_url}/1/items",
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json",
+            },
             params=params,
             timeout=15,
         )
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Upstream error: {e}")
 
-    # Map BASE API response appropriately
+    # Map BASE API response appropriately (robust to non-JSON bodies)
     content_type = resp.headers.get("Content-Type", "")
+    data = None
+    if "application/json" in content_type.lower():
+        try:
+            data = resp.json()
+        except ValueError:
+            data = None
+
     if resp.status_code >= 400:
-        detail = resp.json() if "application/json" in content_type else resp.text
+        detail = data if data is not None else (resp.text or f"HTTP {resp.status_code}")
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
-    return resp.json() if "application/json" in content_type else {"raw": resp.text}
+    return data if data is not None else {"raw": resp.text}

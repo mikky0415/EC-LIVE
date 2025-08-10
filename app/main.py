@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from app.api_client.base_api_client import BaseAPIClient
 from app.config import RuntimeConfig
 from app.routers.items import router as items_router
+from typing import Optional
 
 app = FastAPI(title="EC-LIVE", version="0.1.0")
 
@@ -56,3 +57,16 @@ def set_config(payload: APIConfigIn):
 @app.get("/api/test")
 def api_test():
     return {"result": client.test_connection()}
+
+
+@app.get("/callback")
+def oauth_callback(
+    code: Optional[str] = Query(None, description="Authorization code from BASE"),
+    state: Optional[str] = Query(None, description="Opaque state value"),
+):
+    """OAuth2 callback endpoint.
+    Receives `code` and optional `state` and returns them for the client to exchange for tokens.
+    """
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing 'code' query parameter")
+    return {"received": True, "code": code, "state": state}

@@ -2,6 +2,8 @@
 
 本番運用URL（Render）: https://ec-live.onrender.com/
 
+OAuth2 コールバックURL（固定）: https://ec-live.onrender.com/callback
+
 本ガイドは、**Render（https://render.com）でFastAPI（本プロジェクト）を安定・安全に公開運用するための推奨手順**です。
 
 ---

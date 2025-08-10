@@ -15,6 +15,8 @@ def list_items(
     limit: Optional[int] = Query(None, ge=1, le=100),
     offset: Optional[int] = Query(None, ge=0),
     category_id: Optional[int] = Query(None, ge=1),
+    max_image_no: Optional[int] = Query(None, ge=1, le=20),
+    image_size: Optional[str] = Query(None, description="origin,76,146,300,500,640,sp_480,sp_640 (comma-separated)"),
 ):
     """Proxy to BASE API items endpoint.
     Requires BASE_ACCESS_TOKEN set in environment.
@@ -35,6 +37,8 @@ def list_items(
             "limit": limit,
             "offset": offset,
             "category_id": category_id,
+            "max_image_no": max_image_no,
+            "image_size": image_size,
         }.items()
         if v is not None
     }

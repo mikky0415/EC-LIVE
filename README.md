@@ -7,6 +7,10 @@ This is the initial implementation of the API connection infrastructure and test
 
 - Render (production): https://ec-live.onrender.com/
 
+## OAuth2 Callback URL
+
+- https://ec-live.onrender.com/callback
+
 ## Requirements
 - Python 3.7+
 - FastAPI

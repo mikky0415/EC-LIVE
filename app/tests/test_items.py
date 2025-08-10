@@ -29,6 +29,8 @@ def test_items_ok(monkeypatch):
     def fake_get(url, headers=None, params=None, timeout=None):
         assert url == "https://api.base.ec/1/items"
         assert headers["Authorization"].startswith("Bearer ")
+        # ensure newly supported params can be passed
+        assert "limit" in params
         return DummyResp()
 
     import requests
@@ -41,3 +43,26 @@ def test_items_ok(monkeypatch):
     assert resp.status_code == 200
     data = resp.json()
     assert "items" in data and "count" in data
+
+def test_items_with_image_params(monkeypatch):
+    monkeypatch.setenv("BASE_ACCESS_TOKEN", "token")
+    monkeypatch.setenv("BASE_API_URL", "https://api.base.ec")
+
+    class DummyResp:
+        status_code = 200
+        headers = {"Content-Type": "application/json"}
+
+        def json(self):
+            return {"items": [], "count": 0}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        assert url == "https://api.base.ec/1/items"
+        assert params.get("max_image_no") == 10
+        assert params.get("image_size") == "300,500"
+        return DummyResp()
+
+    import requests
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    resp = client.get("/items?limit=5&max_image_no=10&image_size=300,500")
+    assert resp.status_code == 200

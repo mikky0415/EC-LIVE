@@ -37,9 +37,9 @@ uvicorn app.main:app --reload
 
 ## Environment variables
 
-- `BASE_API_URL` (default: `https://api.base.ec`)
+- `BASE_API_URL` (default: `https://api.thebase.in`)
 - `BASE_ACCESS_TOKEN` (required for `/items`)
 - `BASE_CLIENT_ID` (required for `/auth/exchange`)
 - `BASE_CLIENT_SECRET` (required for `/auth/exchange`)
-- `BASE_OAUTH_TOKEN_URL` (optional, default `https://api.base.ec/1/oauth/token`)
+- `BASE_OAUTH_TOKEN_URL` (optional, default `https://api.thebase.in/1/oauth/token`)
 - `BASE_REDIRECT_URI` (optional, default `https://ec-live.onrender.com/callback`)

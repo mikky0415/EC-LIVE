@@ -24,7 +24,7 @@ def exchange_token(payload: ExchangeIn):
     """
     client_id = os.getenv("BASE_CLIENT_ID")
     client_secret = os.getenv("BASE_CLIENT_SECRET")
-    token_url = os.getenv("BASE_OAUTH_TOKEN_URL", "https://api.base.ec/1/oauth/token")
+    token_url = os.getenv("BASE_OAUTH_TOKEN_URL", "https://api.thebase.in/1/oauth/token")
     redirect_uri = payload.redirect_uri or os.getenv("BASE_REDIRECT_URI", "https://ec-live.onrender.com/callback")
 
     if not client_id or not client_secret:

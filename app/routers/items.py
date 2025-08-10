@@ -22,7 +22,7 @@ def list_items(
     Requires BASE_ACCESS_TOKEN set in environment.
     """
     # Read env at request time to support dynamic changes and tests
-    base_api_url = os.getenv("BASE_API_URL", "https://api.base.ec")
+    base_api_url = os.getenv("BASE_API_URL", "https://api.thebase.in")
     access_token = os.getenv("BASE_ACCESS_TOKEN")
 
     if not access_token:

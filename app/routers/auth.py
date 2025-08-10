@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from typing import Optional
 import os
@@ -56,3 +57,37 @@ def exchange_token(payload: ExchangeIn):
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
     return resp.json() if "application/json" in content_type else {"raw": resp.text}
+
+
+@router.get("/auth/authorize")
+def get_authorize(
+    scope: str = Query("read_items", description="OAuth scopes, space-delimited"),
+    state: Optional[str] = Query("ec-live", description="CSRF protection token"),
+):
+    """Redirect to BASE OAuth authorize endpoint with proper parameters.
+    Respects environment variables:
+      - BASE_CLIENT_ID (required)
+      - BASE_REDIRECT_URI (default: https://ec-live.onrender.com/callback)
+      - BASE_OAUTH_AUTHORIZE_URL (default: https://api.thebase.in/1/oauth/authorize)
+    """
+    client_id = os.getenv("BASE_CLIENT_ID")
+    redirect_uri = os.getenv("BASE_REDIRECT_URI", "https://ec-live.onrender.com/callback")
+    authorize_url = os.getenv("BASE_OAUTH_AUTHORIZE_URL", "https://api.thebase.in/1/oauth/authorize")
+
+    if not client_id:
+        raise HTTPException(status_code=500, detail="BASE_CLIENT_ID is not set")
+
+    # Build query safely
+    from urllib.parse import urlencode
+
+    params = {
+        "response_type": "code",
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "scope": scope,
+    }
+    if state is not None:
+        params["state"] = state
+
+    url = f"{authorize_url}?{urlencode(params)}"
+    return RedirectResponse(url)

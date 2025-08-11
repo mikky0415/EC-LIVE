@@ -11,6 +11,10 @@ router = APIRouter()
 _ITEMS_CACHE: dict[str, dict] = {}
 _CACHE_TTL_SECONDS = int(os.getenv("ITEMS_CACHE_TTL_SECONDS", "30"))
 
+# Backoff registry for rate limits (per access token)
+_RATE_LIMIT_BACKOFF: dict[str, float] = {}  # token -> until_timestamp
+_DEFAULT_BACKOFF_SECONDS = int(os.getenv("ITEMS_DEFAULT_BACKOFF_SECONDS", "60"))
+
 
 @router.get("/items")
 def list_items(
@@ -48,8 +52,14 @@ def list_items(
         if v is not None
     }
 
-    # Cache lookup (only for successful prior responses)
+    # Global backoff check (avoid hitting upstream during Retry-After window)
     now = time.time()
+    until = _RATE_LIMIT_BACKOFF.get(access_token)
+    if until and now < until:
+        retry_after = int(until - now)
+        raise HTTPException(status_code=429, detail={"error": "rate_limited", "retry_after": retry_after}, headers={"Retry-After": str(retry_after)})
+
+    # Cache lookup (only for successful prior responses)
     key_parts = [f"{k}={v}" for k, v in sorted(params.items())]
     cache_key = f"{access_token}|{'&'.join(key_parts)}"
     entry = _ITEMS_CACHE.get(cache_key)
@@ -83,7 +93,13 @@ def list_items(
         # Propagate rate limit specifics when available
         retry_after = resp.headers.get("Retry-After")
         if resp.status_code == 429 or retry_after:
-            raise HTTPException(status_code=429, detail=detail, headers={"Retry-After": retry_after or ""})
+            # Record backoff window
+            try:
+                backoff_secs = int(retry_after) if (retry_after and retry_after.isdigit()) else _DEFAULT_BACKOFF_SECONDS
+            except Exception:
+                backoff_secs = _DEFAULT_BACKOFF_SECONDS
+            _RATE_LIMIT_BACKOFF[access_token] = time.time() + max(backoff_secs, 1)
+            raise HTTPException(status_code=429, detail=detail, headers={"Retry-After": retry_after or str(backoff_secs)})
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
     result = data if data is not None else {"raw": resp.text}

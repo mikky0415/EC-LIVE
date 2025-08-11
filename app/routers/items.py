@@ -2,9 +2,14 @@ from fastapi import APIRouter, Query, HTTPException
 import os
 import requests
 from typing import Optional
+import time
 
 
 router = APIRouter()
+
+# Simple in-memory cache to reduce upstream hits
+_ITEMS_CACHE: dict[str, dict] = {}
+_CACHE_TTL_SECONDS = int(os.getenv("ITEMS_CACHE_TTL_SECONDS", "30"))
 
 
 @router.get("/items")
@@ -43,6 +48,14 @@ def list_items(
         if v is not None
     }
 
+    # Cache lookup (only for successful prior responses)
+    now = time.time()
+    key_parts = [f"{k}={v}" for k, v in sorted(params.items())]
+    cache_key = f"{access_token}|{'&'.join(key_parts)}"
+    entry = _ITEMS_CACHE.get(cache_key)
+    if entry and (now - entry["ts"]) <= _CACHE_TTL_SECONDS:
+        return entry["data"]
+
     try:
         resp = requests.get(
             f"{base_api_url}/1/items",
@@ -67,6 +80,18 @@ def list_items(
 
     if resp.status_code >= 400:
         detail = data if data is not None else (resp.text or f"HTTP {resp.status_code}")
+        # Propagate rate limit specifics when available
+        retry_after = resp.headers.get("Retry-After")
+        if resp.status_code == 429 or retry_after:
+            raise HTTPException(status_code=429, detail=detail, headers={"Retry-After": retry_after or ""})
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
-    return data if data is not None else {"raw": resp.text}
+    result = data if data is not None else {"raw": resp.text}
+
+    # Store successful response in cache
+    try:
+        _ITEMS_CACHE[cache_key] = {"ts": now, "data": result}
+    except Exception:
+        pass
+
+    return result

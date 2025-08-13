@@ -46,6 +46,19 @@ def health():
     }
 
 
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+
+
+@app.get("/api/healthz")
+def healthz_alias():
+    """Alias for health checks under /api prefix.
+    Some platforms/proxies may route prefixed paths differently.
+    """
+    return {"ok": True}
+
+
 @app.get("/config")
 def get_config():
     return {"config": config.masked()}
@@ -63,6 +76,20 @@ def set_config(payload: APIConfigIn):
 @app.get("/api/test")
 def api_test():
     return {"result": client.test_connection()}
+
+
+@app.get("/routes")
+def list_routes_root():
+    """List all registered route paths (debug/helper)."""
+    paths = sorted({getattr(r, "path", None) for r in app.routes if getattr(r, "path", None)})
+    return {"paths": paths, "version": app.version}
+
+
+@app.get("/api/routes")
+def list_routes_api():
+    """Alias under /api to list routes."""
+    paths = sorted({getattr(r, "path", None) for r in app.routes if getattr(r, "path", None)})
+    return {"paths": paths, "version": app.version}
 
 
 @app.get("/callback")

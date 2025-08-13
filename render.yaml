@@ -7,8 +7,13 @@ services:
       pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
+    healthCheckPath: /healthz
     envVars:
       - key: BASE_API_URL
-        value: https://api.base.ec
+        value: https://api.thebase.in
       - key: BASE_ACCESS_TOKEN
         generateValue: true
+      - key: ITEMS_CACHE_TTL_SECONDS
+        value: 30
+      - key: ITEMS_DEFAULT_BACKOFF_SECONDS
+        value: 60

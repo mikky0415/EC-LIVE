@@ -3,11 +3,17 @@ services:
     name: ec-live
     env: python
     autoDeploy: true
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --workers=2 --threads=4 --timeout=120"
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /healthz
     envVars:
       - key: BASE_API_URL
-        sync: false
+        value: https://api.thebase.in
       - key: BASE_ACCESS_TOKEN
         sync: false
+      - key: ITEMS_CACHE_TTL_SECONDS
+        value: 30
+      - key: ITEMS_DEFAULT_BACKOFF_SECONDS
+        value: 60

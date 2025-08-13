@@ -29,11 +29,16 @@ uvicorn app.main:app --reload
 
 - `/` health message
 - `/health` runtime and connection status
+- `/healthz` lightweight health check for load balancers
 - `/config` GET/POST to view/update runtime API config
 - `/api/test` connection test summary
 - `/items` Proxy to BASE API `/1/items` (requires env `BASE_ACCESS_TOKEN`)
 - `/callback` OAuth2 redirect URI (receives `code`, `state`)
 - `/auth/exchange` POST: exchange `code` for tokens (uses env creds)
+  
+Optional helpers:
+- `/auth/authorize` Redirect to BASE authorize URL
+- `/auth/debug` Show effective OAuth endpoints and config flags
 
 ## Environment variables
 
@@ -43,3 +48,5 @@ uvicorn app.main:app --reload
 - `BASE_CLIENT_SECRET` (required for `/auth/exchange`)
 - `BASE_OAUTH_TOKEN_URL` (optional, default `https://api.thebase.in/1/oauth/token`)
 - `BASE_REDIRECT_URI` (optional, default `https://ec-live.onrender.com/callback`)
+- `ITEMS_CACHE_TTL_SECONDS` (optional, default `30`) Cache TTL for successful `/items` responses
+- `ITEMS_DEFAULT_BACKOFF_SECONDS` (optional, default `60`) Backoff window when upstream signals rate limiting and no Retry-After is provided

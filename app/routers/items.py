@@ -72,6 +72,7 @@ def list_items(
             headers={
                 "Authorization": f"Bearer {access_token}",
                 "Accept": "application/json",
+                "User-Agent": "EC-LIVE/1.0 (+https://ec-live.onrender.com)",
             },
             params=params,
             timeout=15,
@@ -92,14 +93,36 @@ def list_items(
         detail = data if data is not None else (resp.text or f"HTTP {resp.status_code}")
         # Propagate rate limit specifics when available
         retry_after = resp.headers.get("Retry-After")
-        if resp.status_code == 429 or retry_after:
+        # Map BASE specific error codes for rate limit (they may return 400)
+        base_error_code = None
+        if isinstance(data, dict):
+            base_error_code = str(data.get("error") or "").strip()
+
+        # Compute conservative backoff windows
+        backoff_secs_calc = None
+        if base_error_code == "hour_api_limit":
+            # Wait until next hour (UTC-based). 00分でリセット。
+            now = time.time()
+            gm = time.gmtime(now)
+            sec_past_hour = gm.tm_min * 60 + gm.tm_sec
+            backoff_secs_calc = max(5, 3600 - sec_past_hour)
+        elif base_error_code == "day_api_limit":
+            # Wait until next day (UTC-based). 00:00でリセット。
+            now = time.time()
+            gm = time.gmtime(now)
+            sec_past_day = gm.tm_hour * 3600 + gm.tm_min * 60 + gm.tm_sec
+            backoff_secs_calc = max(60, 86400 - sec_past_day)
+
+        # Handle rate limit and raise
+        if resp.status_code == 429 or retry_after or backoff_secs_calc is not None:
             # Record backoff window
             try:
-                backoff_secs = int(retry_after) if (retry_after and retry_after.isdigit()) else _DEFAULT_BACKOFF_SECONDS
+                backoff_secs = int(retry_after) if (retry_after and retry_after.isdigit()) else (backoff_secs_calc if backoff_secs_calc is not None else _DEFAULT_BACKOFF_SECONDS)
             except Exception:
                 backoff_secs = _DEFAULT_BACKOFF_SECONDS
             _RATE_LIMIT_BACKOFF[access_token] = time.time() + max(backoff_secs, 1)
             raise HTTPException(status_code=429, detail=detail, headers={"Retry-After": retry_after or str(backoff_secs)})
+
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
     result = data if data is not None else {"raw": resp.text}

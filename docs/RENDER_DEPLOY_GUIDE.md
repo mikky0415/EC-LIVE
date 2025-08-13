@@ -58,8 +58,10 @@ OAuth2 コールバックURL（固定）: https://ec-live.onrender.com/callback
 ## 5. 環境変数（.envの内容）をRenderの「Environment」へ登録
 
 - サービス作成画面の「Environment」セクションで「Add Environment Variable」
-    - `BASE_API_URL` → `https://api.base.ec`
+  - `BASE_API_URL` → `https://api.thebase.in`
     - `BASE_ACCESS_TOKEN` → BASE管理画面で発行したトークン
+  - `ITEMS_CACHE_TTL_SECONDS` → 30（任意、/itemsの成功レスポンスのキャッシュTTL秒）
+  - `ITEMS_DEFAULT_BACKOFF_SECONDS` → 60（任意、Retry-After未提示時のレート制限バックオフ秒）
 
 ※`.env`ファイル自体はアップロード不要・不可。「Environment Variables」からWebで必ず追加！
 
